@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <p class="eyebrow">MI CUENTA</p>
+    <h1>Cambiar contraseña</h1>
+    <section class="formulario">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Actualizar contraseña</button>
+            <a href="{% url 'perfil' %}">Volver a mis datos</a>
+        </form>
+    </section>
+{% endblock %}

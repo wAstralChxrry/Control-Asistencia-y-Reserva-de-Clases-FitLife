@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <p class="eyebrow">GESTIÓN / CLASES</p>
+    <div class="encabezado">
+        <div>
+            <h1>{{ clase.nombre }}</h1>
+            <p>{{ clase.inicio|date:'d M Y · H:i' }} · {{ clase.cupos }} cupos · {{ disponibles }} disponibles</p>
+        </div>
+        <div class="acciones"><a class="boton" href="{% url 'reservas_admin' %}">Gestionar reservas</a><a href="{% url 'lista' 'clases' %}">Volver a clases</a></div>
+    </div>
+    <div class="paneles">
+        <section class="panel">
+            <div class="panel-titulo">
+                <div><p class="eyebrow">CLASE</p><h2>Participantes confirmados ({{ confirmadas|length }})</h2></div>
+            </div>
+            {% for reserva in confirmadas %}
+                <div class="fila"><div class="fila-detalle">
+                    <b>{{ reserva.socio.get_full_name|default:reserva.socio.username }}</b>
+                    <small>Usuario: {{ reserva.socio.username }} · Reserva: {{ reserva.creada|date:'d M Y · H:i' }}</small>
+                </div></div>
+            {% empty %}
+                <div class="vacio"><b>No hay participantes confirmados.</b></div>
+            {% endfor %}
+        </section>
+        <section class="panel">
+            <div class="panel-titulo">
+                <div><p class="eyebrow">ORDEN DE LLEGADA</p><h2>Lista de espera ({{ espera|length }})</h2></div>
+            </div>
+            {% for item in espera %}
+                <div class="fila">
+                    <span class="fecha">{% if item.posicion %}{{ item.posicion }}{% else %}—{% endif %}</span>
+                    <div class="fila-detalle">
+                        <b>{{ item.reserva.socio.get_full_name|default:item.reserva.socio.username }}</b>
+                        <small>Usuario: {{ item.reserva.socio.username }} · Inscripción: {{ item.reserva.creada|date:'d M Y · H:i' }}{% if not item.posicion %} · Membresía no habilitada para recibir cupo{% endif %}</small>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="vacio"><b>No hay socios en espera.</b></div>
+            {% endfor %}
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <p class="eyebrow">GESTIÓN / {{ recurso|upper }}</p>
+    <h1>Datos del registro</h1>
+    <section class="formulario">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}<button>Guardar</button> <a href="{% url 'lista' recurso %}">Volver</a>
+        </form>
+    </section>
+{% endblock %}

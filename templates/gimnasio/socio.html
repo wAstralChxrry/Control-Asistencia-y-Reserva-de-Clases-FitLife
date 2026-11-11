@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load clases_panel %}
+{% block contenido %}
+    <div class="encabezado">
+        <div>
+            <p class="eyebrow">MI CUENTA</p>
+            <h1>Hola, {{ user.first_name|default:user.username }}.</h1>
+            <p>Tu membresía y tus próximas actividades, en un solo lugar.</p>
+        </div>
+    </div>
+    <div class="paneles">
+        <section class="panel membresia">
+            <div class="panel-titulo">
+                <div>
+                    <p class="eyebrow">MI PLAN</p>
+                    <h2>Tu membresía</h2>
+                </div>
+            </div>
+            {% if membresia %}
+                <div class="plan-nombre">
+                    {{ membresia.plan }} <span class="estado {% if membresia.vigente %}estado-ok{% else %}estado-error{% endif %}">
+                    {{ membresia.estado_visible }}</span>
+                </div>
+                <p>Vigencia: {{ membresia.inicio }} al {{ membresia.fin }}</p>
+                {% if not membresia.vigente %}
+                    <p>Actualmente no está vigente.</p>
+                {% endif %}
+                <div class="qr">
+                    <img width="140"
+                         height="140"
+                         src="{% url 'qr' %}"
+                         alt="Código QR personal">
+                    <div>
+                        <b>Tu código de acceso</b>
+                        <p>Preséntalo en recepción o utiliza el código para la simulación.</p>
+                        <code>
+                        {{ membresia.codigo }}</code>
+                    </div>
+                </div>
+            {% else %}
+                <div class="vacio">
+                    <b>Sin membresía registrada</b>
+                    <p>Consulta en recepción para activar tu plan.</p>
+                </div>
+            {% endif %}
+        </section>
+        <section class="panel">
+            <div class="panel-titulo">
+                <div>
+                    <p class="eyebrow">TU AGENDA</p>
+                    <h2>Mis reservas</h2>
+                </div>
+            </div>
+            {% posiciones_espera reservas as reservas_con_posicion %}
+            {% for item in reservas_con_posicion %}
+                <div class="fila">
+                    <div class="fila-detalle">
+                        <b>{{ item.reserva.clase }}</b>
+                        <small>
+                            {% if item.reserva.espera %}
+                                {% if item.posicion %}
+                                    Lista de espera · posición {{ item.posicion }}
+                                {% else %}
+                                    En espera · necesitas una membresía vigente para recibir un cupo
+                                {% endif %}
+                            {% else %}Confirmada{% endif %}
+                        </small>
+                    </div>
+                    <form method="post" action="{% url 'cancelar' item.reserva.pk %}">
+                        {% csrf_token %}
+                        <button class="secundario">Cancelar</button>
+                    </form>
+                </div>
+            {% empty %}
+                <div class="vacio">
+                    <b>Aún no tienes reservas</b>
+                    <p>Explora las próximas clases para comenzar.</p>
+                </div>
+            {% endfor %}
+        </section>
+    </div>
+    <section class="panel">
+        <div class="panel-titulo">
+            <div>
+                <p class="eyebrow">ENCUENTRA TU CLASE</p>
+                <h2>Próximas clases</h2>
+            </div>
+        </div>
+        {% informacion_clases clases user as clases_con_info %}
+        {% for item in clases_con_info %}
+            <div class="fila">
+                <div class="fecha">
+                    <b>
+                    {{ item.clase.inicio|date:'d' }}</b>
+                    <small>{{ item.clase.inicio|date:'M' }}</small>
+                </div>
+                <div class="fila-detalle">
+                    <b>
+                    {{ item.clase.nombre }}</b>
+                    <small>{{ item.clase.inicio|date:'d M Y · H:i' }} · {{ item.disponibles }} disponibles de {{ item.clase.cupos }} cupos</small>
+                </div>
+                {% if item.reserva %}
+                    <span class="estado estado-ok">{% if item.reserva.espera %}En espera{% else %}Reservada{% endif %}</span>
+                {% else %}
+                    <form method="post" action="{% url 'reservar' item.clase.pk %}">
+                        {% csrf_token %}
+                        <button>{% if item.disponibles %}Reservar{% else %}Unirse a espera{% endif %}</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="vacio">
+                <b>No hay clases próximas</b>
+                <p>Vuelve a consultar más adelante.</p>
+            </div>
+        {% endfor %}
+    </section>
+{% endblock %}

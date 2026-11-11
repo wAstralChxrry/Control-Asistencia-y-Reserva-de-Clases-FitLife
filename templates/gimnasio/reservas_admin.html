@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="eyebrow">GESTIÓN / RESERVAS</p>
+<div class="titulo"><h1>Reservas</h1><a class="boton" href="{% url 'reserva_admin_crear' %}">Nueva reserva</a></div>
+<section class="panel">
+    {% for reserva in reservas %}
+    <div class="fila">
+        <div class="fila-detalle">
+            <b>{{ reserva.socio.get_full_name|default:reserva.socio.username }}</b>
+            <small>{{ reserva.clase }} · {% if reserva.espera %}Lista de espera{% else %}Confirmada{% endif %}</small>
+        </div>
+        <div class="acciones">
+            <a href="{% url 'reserva_admin_editar' reserva.pk %}">Editar</a>
+            <form action="{% url 'reserva_admin_eliminar' reserva.pk %}" method="post" onsubmit="return confirm('¿Eliminar esta reserva?')">
+                {% csrf_token %}<button class="link">Eliminar</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}<div class="vacio"><b>No hay reservas registradas.</b></div>{% endfor %}
+</section>
+{% endblock %}

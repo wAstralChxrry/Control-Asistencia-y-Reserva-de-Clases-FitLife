@@ -1,0 +1,5 @@
+Django>=5.2,<7
+djangorestframework>=3.16,<4
+psycopg[binary]>=3.2,<4
+python-dotenv>=1,<2
+qrcode[pil]>=8,<9

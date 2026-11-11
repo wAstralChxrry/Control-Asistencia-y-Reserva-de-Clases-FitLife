@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block titulo %}FitLife{% endblock %}</title>
+        <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+        <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    </head>
+    <body class="{% if not user.is_authenticated %}sin-sesion{% endif %}">
+        {% if user.is_authenticated %}
+            <div class="app">
+                <aside class="sidebar">
+                    <a class="marca" href="{% url 'inicio' %}">
+                        <span class="marca-icono">F<span>.</span>
+                        </span>
+                        <span>fitlife<small>CLUB DEPORTIVO</small>
+                        </span>
+                    </a>
+                    <div class="sidebar-etiqueta">EL CLUB</div>
+                    <nav aria-label="Navegación principal">
+                        <a href="{% url 'inicio' %}"
+                           {% if request.resolver_match.url_name == 'inicio' %}aria-current="page"{% endif %}>
+                            <span class="nav-icono">▦</span> Resumen</a>
+                        {% if not user.is_staff %}
+                            <a href="{% url 'perfil' %}"><span class="nav-icono">○</span> Mis datos</a>
+                        {% endif %}
+                        {% if user.is_staff %}
+                            <div class="nav-seccion">ADMINISTRACIÓN</div>
+                            <a href="{% url 'lista' 'socios' %}"
+                               {% if recurso == 'socios' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">○</span> Socios</a>
+                            <a href="{% url 'lista' 'membresias' %}"
+                               {% if recurso == 'membresias' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">▤</span> Membresías</a>
+                            <a href="{% url 'lista' 'planes' %}"
+                               {% if recurso == 'planes' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">◇</span> Planes</a>
+                            <a href="{% url 'lista' 'pagos' %}"
+                               {% if recurso == 'pagos' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">↗</span> Pagos</a>
+                            <a href="{% url 'lista' 'clases' %}"
+                               {% if recurso == 'clases' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">▣</span> Clases</a>
+                            <a href="{% url 'reservas_admin' %}"><span class="nav-icono">▤</span> Reservas</a>
+                            <a href="{% url 'acceso' %}"
+                               {% if request.resolver_match.url_name == 'acceso' %}aria-current="page"{% endif %}>
+                                <span class="nav-icono">⌁</span> Control de acceso</a>
+                        {% endif %}
+                    </nav>
+                    <div class="sidebar-pie">
+                        <span class="avatar">{{ user.username|first|upper }}</span>
+                        <span class="usuario">
+                            <b>
+                            {{ user.first_name|default:user.username }}</b>
+                            <small>{% if user.is_staff %}Administrador{% else %}Socio{% endif %}</small>
+                        </span>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button class="salir">Salir</button>
+                        </form>
+                    </div>
+                </aside>
+                <div class="cuerpo">
+                    <header class="barra">
+                        <span>FITLIFE <span class="barra-separador">/</span> {% if user.is_staff %}Administración{% else %}Mi cuenta{% endif %}
+                        </span>
+                        <span class="barra-derecha">Gestión del club <i>
+                            </i>
+                        </span>
+                    </header>
+        {% endif %}
+        <main class="contenido">
+            {% for message in messages %}
+                <div class="mensaje {{ message.tags }}" role="status">{{ message }}</div>
+            {% endfor %}
+            {% block contenido %}{% endblock %}
+        </main>
+        {% if user.is_authenticated %}
+            </div>
+            </div>
+        {% endif %}
+    </body>
+</html>

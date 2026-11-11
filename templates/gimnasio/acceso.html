@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <p class="eyebrow">CONTROL DE ACCESO</p>
+    <h1>Registrar movimiento.</h1>
+    <p>Ingresa el código del socio para simular la lectura QR.</p>
+    <section class="formulario">
+        <form method="post">
+            {% csrf_token %}
+            <label for="codigo">Código del socio</label>
+            <input id="codigo" name="codigo" required>
+            <label for="tipo">Movimiento</label>
+            <select id="tipo" name="tipo">
+                <option value="entrada">Entrada</option>
+                <option value="salida">Salida</option>
+            </select>
+            <button>Validar movimiento</button>
+        </form>
+    </section>
+{% endblock %}

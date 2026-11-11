@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <p class="eyebrow">GESTIÓN / {{ recurso|upper }}</p>
+    <div class="titulo">
+        <h1>{{ recurso|capfirst }}</h1>
+        <a class="boton" href="{% url 'crear' recurso %}">Añadir registro</a>
+    </div>
+    <section>
+        {% for item in items %}
+            <div class="fila">
+                <div class="fila-detalle">
+                    {% if recurso == 'socios' %}
+                        <b>{{ item.get_full_name|default:item.username }}</b>
+                        <small>{{ item.username }} · {{ item.email|default:'Sin correo' }} · {% if item.is_active %}Activo{% else %}Inactivo{% endif %}</small>
+                    {% elif recurso == 'planes' %}
+                        <b>{{ item.nombre }}</b>
+                        <small>${{ item.precio }} · {{ item.duracion_dias }} días</small>
+                    {% elif recurso == 'membresias' %}
+                        <b>{{ item.socio.get_full_name|default:item.socio.username }}</b>
+                        <small>{{ item.plan }} · {{ item.estado_visible }} · {{ item.inicio|date:'d/m/Y' }} al {{ item.fin|date:'d/m/Y' }}</small>
+                    {% elif recurso == 'pagos' %}
+                        <b>{{ item.membresia.socio.get_full_name|default:item.membresia.socio.username }} · ${{ item.monto }}</b>
+                        <small>{{ item.fecha|date:'d/m/Y' }}{% if item.detalle %} · {{ item.detalle }}{% endif %}</small>
+                    {% elif recurso == 'clases' %}
+                        <b>{{ item.nombre }}</b>
+                        <small>{{ item.inicio|date:'d/m/Y H:i' }} · {{ item.cupos }} cupos</small>
+                    {% else %}
+                        <b>{{ item }}</b>
+                    {% endif %}
+                </div>
+                <div class="acciones">
+                    {% if recurso == 'clases' %}
+                        <a href="{% url 'participantes_clase' item.pk %}">Participantes y espera</a>
+                    {% endif %}
+                    <a href="{% url 'editar' recurso item.pk %}">Editar</a>
+                    <form method="post"
+                          action="{% url 'eliminar' recurso item.pk %}"
+                          onsubmit="return confirm('{% if recurso == 'clases' %}¿Eliminar esta clase y todas sus reservas y lista de espera?{% else %}¿Eliminar este registro?{% endif %}')">
+                        {% csrf_token %}
+                        <button class="link">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        {% empty %}
+            <p>No hay registros todavía.</p>
+        {% endfor %}
+    </section>
+{% endblock %}

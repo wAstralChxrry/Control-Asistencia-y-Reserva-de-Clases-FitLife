@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Iniciar sesión | FitLife{% endblock %}
+{% block contenido %}
+    <div class="acceso-pagina">
+        <header class="acceso-cabecera">
+            <a class="acceso-marca" href="{% url 'login' %}" aria-label="FitLife, inicio de sesión">
+                <span class="acceso-marca-icono">F<span>.</span></span>
+                <span>fitlife</span>
+            </a>
+            <span class="acceso-cabecera-texto">Club deportivo</span>
+        </header>
+
+        <div class="acceso-centro">
+            <section class="acceso-tarjeta" aria-labelledby="acceso-titulo">
+                <div class="acceso-intro">
+                    <p class="acceso-etiqueta">ACCESO DE SOCIOS Y PERSONAL</p>
+                    <h1 id="acceso-titulo">Iniciar sesión</h1>
+                    <p>Ingresa con tu usuario y contraseña.</p>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="acceso-error" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <form method="post" class="acceso-formulario">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="acceso-campo">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<p class="acceso-error-campo">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit">Ingresar</button>
+                </form>
+                <div class="acceso-ayuda">
+                    <strong>¿Aún no tienes una cuenta?</strong>
+                    <p>Solicita tu registro en la recepción del gimnasio.</p>
+                </div>
+            </section>
+        </div>
+        <footer class="acceso-pie">FitLife · Control de asistencia y reservas</footer>
+    </div>
+{% endblock %}

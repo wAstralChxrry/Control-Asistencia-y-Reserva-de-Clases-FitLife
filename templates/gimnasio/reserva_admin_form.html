@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="eyebrow">GESTIÓN / RESERVAS</p>
+<h1>{% if reserva %}Editar reserva{% else %}Nueva reserva{% endif %}</h1>
+<p>La confirmación o lista de espera se asignará según los cupos disponibles.</p>
+<section class="formulario"><form method="post">{% csrf_token %}{{ form.as_p }}<button>Guardar</button> <a href="{% url 'reservas_admin' %}">Volver</a></form></section>
+{% endblock %}

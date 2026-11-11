@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block contenido %}
+    <div class="encabezado encabezado-club">
+        <div>
+            <p class="eyebrow">FITLIFE / EL CLUB EN MARCHA</p>
+            <h1>Hoy en<br><em>FitLife.</em></h1>
+            <p>La actividad del gimnasio, de un vistazo.</p>
+        </div>
+        <div class="cabecera-accion">
+            <span class="cabecera-nota">RECEPCIÓN<br>Y ACCESOS</span>
+            <a class="boton" href="{% url 'acceso' %}">Registrar acceso <span>↗</span></a>
+        </div>
+    </div>
+    <section class="demo-controles" aria-label="Datos de demostración">
+        <div>
+            <strong>Datos de demostración</strong>
+            <p>{% if demo_cargada %}Hay datos de ejemplo cargados.{% else %}Carga socios, planes, clases y movimientos de ejemplo.{% endif %}</p>
+        </div>
+        {% if demo_cargada %}
+            <form method="post" action="{% url 'credenciales_demo' %}">
+                {% csrf_token %}<button type="submit">Generar acceso de socio</button>
+            </form>
+            <form method="post" action="{% url 'eliminar_demo' %}" onsubmit="return confirm('¿Eliminar los datos creados para la demostración?')">
+                {% csrf_token %}<button class="demo-eliminar" type="submit">Eliminar datos de prueba</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'cargar_demo' %}">
+                {% csrf_token %}<button type="submit">Cargar datos de prueba</button>
+            </form>
+        {% endif %}
+    </section>
+    <div class="franja">
+        <span>EL CLUB EN CIFRAS</span>
+        <span>Actualización automática de aforo</span>
+    </div>
+    <div class="metricas">
+        <section class="metrica destacado">
+            <div class="metrica-top">
+                <span>En el gimnasio</span>
+                <span>01</span>
+            </div>
+            <strong id="aforo" data-url="{% url 'aforo' %}">{{ aforo }}</strong>
+            <small id="aforo-estado" role="status" aria-live="polite"><i></i> Aforo actualizado</small>
+            </section>
+            <section class="metrica">
+                <div class="metrica-top">
+                    <span>Socios registrados</span>
+                    <span>02</span>
+                </div>
+                <strong>{{ socios }}</strong>
+                <a href="{% url 'lista' 'socios' %}">Ver socios <span>↗</span>
+                </a>
+            </section>
+            <section class="metrica">
+                <div class="metrica-top">
+                    <span>Pagos registrados</span>
+                    <span>03</span>
+                </div>
+                <strong>{{ pagos }}</strong>
+                <a href="{% url 'lista' 'pagos' %}">Ver pagos <span>↗</span>
+                </a>
+            </section>
+        </div>
+        <div class="paneles">
+            <section class="panel">
+                <div class="panel-titulo">
+                    <div>
+                        <p class="eyebrow">AGENDA</p>
+                        <h2>Próximas clases</h2>
+                    </div>
+                    <a href="{% url 'lista' 'clases' %}">Ver todas ↗</a>
+                </div>
+                {% for clase in clases %}
+                    <div class="fila">
+                        <div class="fecha">
+                            <b>
+                            {{ clase.inicio|date:'d' }}</b>
+                            <small>{{ clase.inicio|date:'M' }}</small>
+                        </div>
+                        <div class="fila-detalle">
+                            <b>
+                            {{ clase.nombre }}</b>
+                            <small>{{ clase.inicio|date:'H:i' }} · {{ clase.cupos }} cupos</small>
+                        </div>
+                        <a href="{% url 'participantes_clase' clase.pk %}">Ver participantes ↗</a>
+                    </div>
+                {% empty %}
+                    <div class="vacio">
+                        <b>No hay clases programadas</b>
+                        <p>Agrega una clase para verla en la agenda.</p>
+                        <a href="{% url 'crear' 'clases' %}">Crear clase →</a>
+                    </div>
+                {% endfor %}
+            </section>
+            <section class="panel">
+                <div class="panel-titulo">
+                    <div>
+                        <p class="eyebrow">REGISTRO</p>
+                        <h2>Últimos movimientos</h2>
+                    </div>
+                    <a href="{% url 'acceso' %}">Control de acceso ↗</a>
+                </div>
+                {% for acceso in accesos %}
+                    <div class="fila">
+                        <span class="mov-icono">{% if acceso.tipo == "entrada" %}↗{% else %}↙{% endif %}</span>
+                        <div class="fila-detalle">
+                            <b>
+                            {{ acceso.membresia.socio }}</b>
+                            <small>{{ acceso.get_tipo_display }} · {{ acceso.fecha|date:'d M, H:i' }}</small>
+                        </div>
+                        <span class="estado {% if acceso.permitido %}estado-ok{% else %}estado-error{% endif %}">
+                            {% if acceso.permitido %}Permitido{% else %}Rechazado{% endif %}
+                        </span>
+                    </div>
+                {% empty %}
+                    <div class="vacio">
+                        <b>Aún no hay movimientos</b>
+                        <p>Los accesos registrados aparecerán aquí.</p>
+                        <a href="{% url 'acceso' %}">Registrar movimiento →</a>
+                    </div>
+                {% endfor %}
+            </section>
+        </div>
+        <script src="{% static 'js/aforo.js' %}" defer></script>
+{% endblock %}
