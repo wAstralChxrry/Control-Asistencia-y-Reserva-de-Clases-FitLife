@@ -65,3 +65,9 @@
 > Ajusta los datos de demostración para que las clases comiencen el jueves y sirvan para una presentación el viernes. Actualiza la documentación y prepara un repositorio público en GitHub, sin incluir archivos de configuración local ni la base de datos.
 
 **Apoyo:** se programaron las clases de ejemplo para el 12, 13 y 14 de noviembre de 2026 y se prepararon los archivos para el repositorio. La publicación en AWS permanece pendiente.
+
+## 12. Preparar la instalación en AWS
+
+> La instancia EC2 de Ubuntu ya está creada con IP elástica y grupos de seguridad. Explica cómo clonar el repositorio, configurar PostgreSQL y Django, iniciar la aplicación y mantener activa la revisión de la lista de espera.
+
+**Apoyo:** se prepararon instrucciones para instalar dependencias, configurar la base de datos y las variables de entorno, ejecutar Gunicorn y el proceso de espera con systemd y servir la aplicación con Nginx. La instalación en EC2 aún debe verificarse.
