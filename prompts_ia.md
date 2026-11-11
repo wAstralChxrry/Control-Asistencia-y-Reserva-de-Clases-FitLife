@@ -1,7 +1,5 @@
 # Registro de uso de inteligencia artificial
 
-Los siguientes prompts son una **reconstrucción** de las solicitudes realizadas durante el desarrollo de FitLife. Agrupan y ordenan la conversación por tareas; no son citas textuales ni un historial completo.
-
 ## 1. Entender el caso y planificar
 
 > Lee el caso de FitLife y su rúbrica. Organiza un roadmap para construir el sistema con Django, Django REST Framework y PostgreSQL. Separa membresías, pagos, control de acceso, clases, lista de espera y aforo. El gimnasio debe tener un dashboard propio y Django Admin debe quedar habilitado aparte.
