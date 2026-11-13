@@ -2,6 +2,8 @@
 
 Aplicación web para controlar membresías, simular el ingreso al gimnasio y reservar clases grupales. El administrador trabaja desde un panel propio y los socios pueden consultar su membresía y sus reservas.
 
+Acceso a la aplicación: [http://44.211.20.141](http://44.211.20.141)
+
 ## Funcionalidades
 
 - Administración de socios, planes, pagos, membresías y clases.
