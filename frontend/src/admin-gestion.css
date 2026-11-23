@@ -1,0 +1,62 @@
+.gestion-formulario {
+    max-width: 680px;
+    margin: 20px 0;
+}
+
+.gestion-formulario form {
+    padding-top: 20px;
+}
+
+.gestion-campo {
+    margin-bottom: 18px;
+}
+
+.gestion-campo input:not([type="checkbox"]),
+.gestion-campo select {
+    margin-bottom: 0;
+}
+
+.gestion-campo small {
+    display: block;
+    color: #78847b;
+    margin-top: 6px;
+}
+
+.gestion-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gestion-botones {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.gestion-exito,
+.gestion-error {
+    padding: 12px;
+    margin-top: 18px;
+    border-left: 3px solid;
+}
+
+.gestion-exito {
+    background: #edf5df;
+    color: #42683d;
+}
+
+.gestion-error {
+    background: #faece6;
+    color: #8d493b;
+}
+
+.gestion-lista .acciones {
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .gestion-lista .fila {
+        flex-wrap: wrap;
+    }
+}

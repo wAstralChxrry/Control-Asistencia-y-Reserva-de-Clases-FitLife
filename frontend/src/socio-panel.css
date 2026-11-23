@@ -1,0 +1,44 @@
+.socio-vistas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 24px 0 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.socio-vistas button:not(.salir):not(.link) {
+    padding: 10px 16px;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--ink);
+}
+
+.socio-vistas button.socio-vista-activa:not(.salir):not(.link) {
+    border-bottom-color: #e75536;
+    font-weight: 700;
+}
+
+.socio-perfil {
+    max-width: 650px;
+}
+
+.socio-perfil form {
+    margin-top: 24px;
+}
+
+.socio-qr-espera {
+    display: grid;
+    width: 140px;
+    min-height: 140px;
+    place-items: center;
+    background: #f6f5ee;
+    color: #6d7972;
+    font-size: 12px;
+}
+
+.socio-vistas button:disabled,
+.socio-perfil button:disabled {
+    opacity: .55;
+    cursor: wait;
+}

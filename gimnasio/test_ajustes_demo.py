@@ -10,6 +10,7 @@ from django.utils import timezone
 from .models import Clase, LoteDemo, Membresia, Plan, Reserva
 
 
+@override_settings(DEBUG=True)
 class AjustesDemoTest(TestCase):
     @classmethod
     def setUpTestData(cls):

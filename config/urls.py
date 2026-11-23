@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import include, path
 from gimnasio import demo, panel_views, perfil, reserva_admin_views, views
 
 urlpatterns = [
+    path("api/", include("api.urls")),
     path("admin/", admin.site.urls),
     path("ingresar/", auth_views.LoginView.as_view(), name="login"),
     path("salir/", auth_views.LogoutView.as_view(), name="logout"),

@@ -1,0 +1,71 @@
+.demo-controles-react {
+    margin-top: 20px;
+    padding: 16px 20px !important;
+}
+
+.demo-controles-contenido {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.demo-controles-contenido strong {
+    font-size: 13px;
+}
+
+.demo-controles-contenido p {
+    margin: 5px 0 0;
+    color: #596b60;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.demo-controles-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.demo-controles-acciones .demo-eliminar {
+    background: #f7e8e2 !important;
+    color: #963e2c !important;
+}
+
+.demo-controles-acciones button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.demo-controles-aviso,
+.demo-controles-error,
+.demo-controles-credenciales {
+    margin: 14px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.demo-controles-aviso {
+    color: #305b3b;
+}
+
+.demo-controles-error {
+    color: #983b2c;
+}
+
+.demo-controles-credenciales {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.demo-controles-credenciales p {
+    margin: 5px 0 0;
+}
+
+@media (max-width: 600px) {
+    .demo-controles-contenido {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

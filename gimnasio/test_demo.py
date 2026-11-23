@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 
 
+@override_settings(DEBUG=True)
 class DemoTest(TestCase):
     @classmethod
     def setUpTestData(cls):
