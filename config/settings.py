@@ -108,6 +108,13 @@ if os.getenv("POSTGRES_DB"):
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
+    opciones_postgres = {}
+    if os.getenv("POSTGRES_SSLMODE"):
+        opciones_postgres["sslmode"] = os.environ["POSTGRES_SSLMODE"]
+    if os.getenv("POSTGRES_SSLROOTCERT"):
+        opciones_postgres["sslrootcert"] = os.environ["POSTGRES_SSLROOTCERT"]
+    if opciones_postgres:
+        DATABASES["default"]["OPTIONS"] = opciones_postgres
 elif not DEBUG:
     raise ImproperlyConfigured("POSTGRES_DB debe configurarse cuando DEBUG=False.")
 
