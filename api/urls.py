@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView
-from . import demo
+from . import demo, recursos
 from .autenticacion import RenovacionView
 from .views import (
     ClaseViewSet,
@@ -28,6 +28,7 @@ router.register("clases", ClaseViewSet)
 router.register("reservas", ReservaViewSet, basename="reserva")
 
 urlpatterns = [
+    path("recursos/favicon/", recursos.favicon, name="api_favicon"),
     path("demo/estado/", demo.estado, name="api_demo_estado"),
     path("demo/cargar/", demo.cargar, name="api_demo_cargar"),
     path("demo/eliminar/", demo.eliminar, name="api_demo_eliminar"),

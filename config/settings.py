@@ -170,3 +170,6 @@ MAILERS = {
     },
 }
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+S3_RECURSOS_BUCKET = os.getenv("S3_RECURSOS_BUCKET", "")
+S3_RECURSOS_REGION = os.getenv("S3_RECURSOS_REGION", "us-east-1")
