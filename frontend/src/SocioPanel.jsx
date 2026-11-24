@@ -227,10 +227,11 @@ export default function SocioPanel({ token, perfil, api, alCambiarContrasena }) 
                   <div className="panel-titulo"><div><p className="eyebrow">TU AGENDA</p><h2>Mis reservas</h2></div></div>
                   {reservas.length ? reservas.map(reserva => {
                     const clase = clasePorId.get(reserva.clase);
+                    const puedeCancelar = clase && new Date(clase.inicio).getTime() > Date.now();
                     return <div className="fila" key={reserva.id}>
                       <div className="fila-detalle"><b>{clase ? clase.nombre : `Clase ${reserva.clase}`}</b>
                         <small>{clase && `${fechaHora(clase.inicio)} · `}{reserva.espera ? `Lista de espera${reserva.posicion ? ` · posición ${reserva.posicion}` : ''}` : 'Confirmada'}</small></div>
-                      <button type="button" className="secundario" disabled={ocupado} onClick={() => realizar(`reservas/${reserva.id}/cancelar/`, null, 'Tu reserva fue cancelada.')}>Cancelar</button>
+                      {puedeCancelar ? <button type="button" className="secundario" disabled={ocupado} onClick={() => realizar(`reservas/${reserva.id}/cancelar/`, null, 'Tu reserva fue cancelada.')}>Cancelar</button> : <span className="estado">Clase iniciada</span>}
                     </div>;
                   }) : <div className="vacio"><b>Aún no tienes reservas</b><p>Explora las próximas clases para comenzar.</p></div>}
                 </section>

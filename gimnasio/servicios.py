@@ -1,8 +1,40 @@
 """Operaciones compartidas para mantener los cupos de las clases."""
 
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.db import connection
 
 from .models import Clase, Membresia, Reserva
+
+MENSAJE_HORARIO = "Ya tienes una inscripción en otra clase a la misma hora."
+
+
+def bloquear_socio(socio_id):
+    """Serializa las inscripciones simultáneas de un mismo socio."""
+    return get_user_model().objects.select_for_update().get(pk=socio_id)
+
+
+def tiene_conflicto_horario(socio_id, inicio, excluir_reserva=None):
+    reservas = Reserva.objects.filter(socio_id=socio_id, clase__inicio=inicio)
+    if excluir_reserva is not None:
+        reservas = reservas.exclude(pk=excluir_reserva)
+    return reservas.exists()
+
+
+def clase_tiene_conflictos(clase, inicio):
+    """Comprueba cambios de horario mientras se mantienen bloqueados los socios."""
+    socios = list(clase.reservas.order_by().values_list("socio_id", flat=True))
+    list(
+        get_user_model()
+        .objects.select_for_update()
+        .filter(pk__in=socios)
+        .order_by("pk")
+    )
+    return (
+        Reserva.objects.filter(socio_id__in=socios, clase__inicio=inicio)
+        .exclude(clase=clase)
+        .exists()
+    )
 
 
 def promover_lista_espera(clase):
@@ -26,8 +58,26 @@ def promover_lista_espera(clase):
     }
     promovidos = 0
     for reserva in clase.reservas.filter(espera=True):
+        usuarios = get_user_model().objects
+        if connection.features.has_select_for_update_skip_locked:
+            usuarios = usuarios.select_for_update(skip_locked=True)
+        else:
+            usuarios = usuarios.select_for_update()
+        socio = usuarios.filter(pk=reserva.socio_id).first()
+        # Mantiene el orden de espera cuando otro proceso bloquea al socio.
+        if not socio:
+            break
         miembro = socios_con_membresia.get(reserva.socio_id)
-        if miembro and miembro.permite_acceso:
+        if (
+            miembro
+            and socio.is_active
+            and miembro.vigente
+            and not Reserva.objects.filter(
+                socio_id=reserva.socio_id, clase__inicio=clase.inicio, espera=False
+            )
+            .exclude(pk=reserva.pk)
+            .exists()
+        ):
             reserva.espera = False
             reserva.save(update_fields=["espera"])
             promovidos += 1

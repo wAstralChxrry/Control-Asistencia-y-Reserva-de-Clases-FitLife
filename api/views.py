@@ -15,7 +15,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from gimnasio.models import Acceso, Clase, Membresia, Pago, Plan, Reserva
-from gimnasio.servicios import promover_lista_espera, reconciliar_esperas
+from gimnasio.servicios import (
+    MENSAJE_HORARIO,
+    bloquear_socio,
+    clase_tiene_conflictos,
+    promover_lista_espera,
+    reconciliar_esperas,
+    tiene_conflicto_horario,
+)
 from .permissions import EsAdministrador
 from .serializers import (
     ClaseSerializer,
@@ -98,6 +105,13 @@ class ClaseViewSet(viewsets.ModelViewSet):
                 clase, data=request.data, partial=kwargs.pop("partial", False)
             )
             serializer.is_valid(raise_exception=True)
+            nuevo_inicio = serializer.validated_data.get("inicio", clase.inicio)
+            if nuevo_inicio != clase.inicio and clase_tiene_conflictos(
+                clase, nuevo_inicio
+            ):
+                raise ValidationError(
+                    {"inicio": "Un socio ya está inscrito en otra clase a esa hora."}
+                )
             if (
                 serializer.validated_data.get("cupos", clase.cupos)
                 < clase.reservas.filter(espera=False).count()
@@ -131,7 +145,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 Clase.objects.select_for_update(),
                 pk=serializer.validated_data["clase"].pk,
             )
-            socio = serializer.validated_data["socio"]
+            socio = bloquear_socio(serializer.validated_data["socio"].pk)
             miembro = Membresia.objects.filter(socio=socio).first()
             if (
                 socio.is_staff
@@ -144,6 +158,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 )
             if Reserva.objects.filter(clase=clase, socio=socio).exists():
                 raise ValidationError("El socio ya está inscrito en esta clase.")
+            if tiene_conflicto_horario(socio.pk, clase.inicio):
+                raise ValidationError(MENSAJE_HORARIO)
             reserva = serializer.save(espera=True)
             promover_lista_espera(clase)
             reserva.refresh_from_db()
@@ -173,6 +189,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             ):
                 raise ValidationError("La reserva cambió; vuelve a intentarlo.")
             destino = clases[clase_id]
+            socio = bloquear_socio(socio.pk)
             miembro = Membresia.objects.filter(socio=socio).first()
             if (
                 socio.is_staff
@@ -189,6 +206,10 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 .exists()
             ):
                 raise ValidationError("El socio ya está inscrito en esta clase.")
+            if tiene_conflicto_horario(
+                socio.pk, destino.inicio, excluir_reserva=actual.pk
+            ):
+                raise ValidationError(MENSAJE_HORARIO)
             if (actual.clase_id, actual.socio_id) != (clase_id, socio.pk):
                 origen = clases[actual.clase_id]
                 actual.clase, actual.socio, actual.espera, actual.creada = (
@@ -225,6 +246,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             raise ValidationError({"clase": "Indica un identificador válido."})
         with transaction.atomic():
             clase = get_object_or_404(Clase.objects.select_for_update(), pk=clase_id)
+            bloquear_socio(request.user.pk)
             miembro = Membresia.objects.filter(socio=request.user).first()
             if (
                 not miembro
@@ -236,12 +258,15 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 )
             if Reserva.objects.filter(clase=clase, socio=request.user).exists():
                 raise ValidationError("Ya tienes una inscripción para esta clase.")
-            promover_lista_espera(clase)
+            if tiene_conflicto_horario(request.user.pk, clase.inicio):
+                raise ValidationError(MENSAJE_HORARIO)
             reserva = Reserva.objects.create(
                 clase=clase,
                 socio=request.user,
-                espera=clase.reservas.filter(espera=False).count() >= clase.cupos,
+                espera=True,
             )
+            promover_lista_espera(clase)
+            reserva.refresh_from_db()
         return Response(
             self.get_serializer(reserva).data, status=status.HTTP_201_CREATED
         )
@@ -258,6 +283,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 Clase.objects.select_for_update(), pk=reserva.clase_id
             )
             reserva = get_object_or_404(Reserva, pk=pk, socio=request.user, clase=clase)
+            if clase.inicio <= timezone.now():
+                raise ValidationError("No se puede cancelar una clase que ya comenzó.")
             reserva.delete()
             promover_lista_espera(clase)
         return Response(status=status.HTTP_204_NO_CONTENT)

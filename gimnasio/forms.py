@@ -121,3 +121,19 @@ class ClaseForm(forms.ModelForm):
                 "Los cupos no pueden ser menores que las reservas confirmadas."
             )
         return cupos
+
+    def clean_inicio(self):
+        inicio = self.cleaned_data["inicio"]
+        if self.instance.pk and inicio != self.instance.inicio:
+            from .models import Reserva
+
+            socios = self.instance.reservas.values("socio_id")
+            if (
+                Reserva.objects.filter(socio_id__in=socios, clase__inicio=inicio)
+                .exclude(clase=self.instance)
+                .exists()
+            ):
+                raise forms.ValidationError(
+                    "Un socio ya está inscrito en otra clase a esa hora."
+                )
+        return inicio

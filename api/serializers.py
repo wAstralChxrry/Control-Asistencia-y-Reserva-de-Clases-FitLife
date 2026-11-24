@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from rest_framework import serializers
 from gimnasio.models import Clase, Membresia, Pago, Plan, Reserva
@@ -128,13 +128,25 @@ class ReservaSerializer(serializers.ModelSerializer):
         if not obj.espera:
             return None
         hoy = timezone.localdate()
-        elegibles = Reserva.objects.filter(
-            clase=obj.clase,
-            espera=True,
-            socio__is_active=True,
-            socio__membresia__estado="activa",
-            socio__membresia__inicio__lte=hoy,
-            socio__membresia__fin__gte=hoy,
+        elegibles = (
+            Reserva.objects.filter(
+                clase=obj.clase,
+                espera=True,
+                socio__is_active=True,
+                socio__membresia__estado="activa",
+                socio__membresia__inicio__lte=hoy,
+                socio__membresia__fin__gte=hoy,
+            )
+            .annotate(
+                conflicto_horario=Exists(
+                    Reserva.objects.filter(
+                        socio_id=OuterRef("socio_id"),
+                        clase__inicio=obj.clase.inicio,
+                        espera=False,
+                    ).exclude(clase_id=obj.clase_id)
+                )
+            )
+            .filter(conflicto_horario=False)
         )
         if not elegibles.filter(pk=obj.pk).exists():
             return None

@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .forms import ClaseForm, MembresiaForm, PagoForm, PlanForm
-from .models import Acceso, Clase, Membresia, Pago, Plan, Reserva
+from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 from .servicios import promover_lista_espera, reconciliar_esperas
 
 admin.site.site_header = "Administración FitLife"
@@ -97,7 +97,14 @@ class ClaseAdmin(admin.ModelAdmin):
         # Se adquiere el mismo bloqueo que usan las reservas antes de validar cupos.
         with transaction.atomic():
             if request.method == "POST" and object_id:
-                Clase.objects.select_for_update().filter(pk=object_id).first()
+                clase = Clase.objects.select_for_update().filter(pk=object_id).first()
+                if clase:
+                    socios = clase.reservas.values_list("socio_id", flat=True)
+                    list(
+                        Usuario.objects.select_for_update()
+                        .filter(pk__in=socios)
+                        .order_by("pk")
+                    )
             return super().changeform_view(request, object_id, form_url, extra_context)
 
     def save_model(self, request, obj, form, change):
@@ -129,3 +136,10 @@ class AccesoAdmin(SoloLecturaAdmin):
     list_filter = ("tipo", "permitido", "fecha")
     search_fields = ("membresia__socio__username",)
     readonly_fields = ("fecha",)
+
+
+@admin.register(LoteDemo)
+class LoteDemoAdmin(SoloLecturaAdmin):
+    list_display = ("id", "creado")
+    list_filter = ("creado",)
+    readonly_fields = ("registros", "creado")

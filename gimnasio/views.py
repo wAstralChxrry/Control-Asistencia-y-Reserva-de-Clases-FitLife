@@ -14,7 +14,14 @@ from django.views.decorators.http import require_POST
 from .forms import ClaseForm, MembresiaForm, PagoForm, PlanForm, SocioForm
 from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 from .permisos import solo_socio
-from .servicios import promover_lista_espera, reconciliar_esperas
+from .servicios import (
+    MENSAJE_HORARIO,
+    bloquear_socio,
+    clase_tiene_conflictos,
+    promover_lista_espera,
+    reconciliar_esperas,
+    tiene_conflicto_horario,
+)
 
 admin_required = user_passes_test(lambda u: u.is_active and u.is_staff)
 RECURSOS = {
@@ -85,6 +92,14 @@ def editar(request, recurso, pk=None):
         with transaction.atomic():
             if model is Clase and instance:
                 clase_bloqueada = Clase.objects.select_for_update().get(pk=instance.pk)
+                if form.cleaned_data[
+                    "inicio"
+                ] != clase_bloqueada.inicio and clase_tiene_conflictos(
+                    clase_bloqueada, form.cleaned_data["inicio"]
+                ):
+                    form.add_error(
+                        "inicio", "Un socio ya está inscrito en otra clase a esa hora."
+                    )
                 if (
                     form.cleaned_data["cupos"]
                     < clase_bloqueada.reservas.filter(espera=False).count()
@@ -183,22 +198,30 @@ def aforo(request):
 def reservar(request, pk):
     with transaction.atomic():
         clase = get_object_or_404(Clase.objects.select_for_update(), pk=pk)
+        bloquear_socio(request.user.pk)
         miembro = Membresia.objects.filter(socio=request.user).first()
         if not miembro or not miembro.permite_acceso or clase.inicio <= timezone.now():
             messages.error(
                 request, "Necesitas una membresía vigente y una clase futura."
             )
-        elif not Reserva.objects.filter(clase=clase, socio=request.user).exists():
-            # Atiende primero a la lista de espera si hay plazas disponibles.
+        elif Reserva.objects.filter(clase=clase, socio=request.user).exists():
+            messages.info(request, "Ya tienes una inscripción para esta clase.")
+        elif tiene_conflicto_horario(request.user.pk, clase.inicio):
+            messages.error(request, MENSAJE_HORARIO)
+        else:
+            reserva = Reserva.objects.create(
+                clase=clase, socio=request.user, espera=True
+            )
             promover_lista_espera(clase)
-            espera = clase.reservas.filter(espera=False).count() >= clase.cupos
-            Reserva.objects.create(clase=clase, socio=request.user, espera=espera)
+            reserva.refresh_from_db()
             messages.success(
                 request,
-                "Inscripción en lista de espera." if espera else "Reserva confirmada.",
+                (
+                    "Inscripción en lista de espera."
+                    if reserva.espera
+                    else "Reserva confirmada."
+                ),
             )
-        else:
-            messages.info(request, "Ya tienes una inscripción para esta clase.")
     return redirect("inicio")
 
 
@@ -209,6 +232,9 @@ def cancelar(request, pk):
         clase_id = get_object_or_404(Reserva, pk=pk, socio=request.user).clase_id
         clase = Clase.objects.select_for_update().get(pk=clase_id)
         reserva = get_object_or_404(Reserva, pk=pk, socio=request.user, clase=clase)
+        if clase.inicio <= timezone.now():
+            messages.error(request, "No se puede cancelar una clase que ya comenzó.")
+            return redirect("inicio")
         era_confirmada = not reserva.espera
         reserva.delete()
         if era_confirmada:
