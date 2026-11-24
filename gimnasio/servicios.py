@@ -3,10 +3,30 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db import connection
+from django.db.models import Q
 
 from .models import Clase, Membresia, Reserva
 
 MENSAJE_HORARIO = "Ya tienes una inscripción en otra clase a la misma hora."
+MENSAJE_VIGENCIA_CLASE = (
+    "La membresía debe estar vigente también en la fecha de la clase."
+)
+
+
+def membresia_cubre_clase(miembro, inicio):
+    """Comprueba la fecha de la clase en la zona horaria del gimnasio."""
+    fecha = timezone.localtime(inicio).date()
+    return miembro.inicio <= fecha <= miembro.fin
+
+
+def clase_fuera_vigencia(clase, inicio):
+    """Impide mover una clase fuera de la vigencia de sus inscritos."""
+    fecha = timezone.localtime(inicio).date()
+    return clase.reservas.filter(
+        Q(socio__membresia__isnull=True)
+        | Q(socio__membresia__inicio__gt=fecha)
+        | Q(socio__membresia__fin__lt=fecha)
+    ).exists()
 
 
 def bloquear_socio(socio_id):
@@ -72,6 +92,7 @@ def promover_lista_espera(clase):
             miembro
             and socio.is_active
             and miembro.vigente
+            and membresia_cubre_clase(miembro, clase.inicio)
             and not Reserva.objects.filter(
                 socio_id=reserva.socio_id, clase__inicio=clase.inicio, espera=False
             )

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from .fechas import fecha_fin_membresia
 from .models import Plan, Membresia, Pago, Clase
 
 
@@ -75,6 +76,11 @@ class MembresiaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.instance.pk and "fin" in self.fields:
+            self.fields["fin"].required = False
+            self.fields["fin"].help_text = (
+                "Si se deja vacío, se calcula según los meses del plan."
+            )
         if "socio" not in self.fields:
             return
         if self.instance.pk:
@@ -87,6 +93,20 @@ class MembresiaForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if (
+            not self.instance.pk
+            and not data.get("fin")
+            and data.get("inicio")
+            and data.get("plan")
+        ):
+            try:
+                data["fin"] = fecha_fin_membresia(
+                    data["inicio"], data["plan"].duracion_meses
+                )
+            except (OverflowError, ValueError):
+                self.add_error(
+                    "inicio", "La duración del plan excede las fechas permitidas."
+                )
         if data.get("inicio") and data.get("fin") and data["fin"] < data["inicio"]:
             raise forms.ValidationError("La fecha final debe ser posterior al inicio.")
         return data
@@ -126,6 +146,7 @@ class ClaseForm(forms.ModelForm):
         inicio = self.cleaned_data["inicio"]
         if self.instance.pk and inicio != self.instance.inicio:
             from .models import Reserva
+            from .servicios import clase_fuera_vigencia
 
             socios = self.instance.reservas.values("socio_id")
             if (
@@ -135,5 +156,9 @@ class ClaseForm(forms.ModelForm):
             ):
                 raise forms.ValidationError(
                     "Un socio ya está inscrito en otra clase a esa hora."
+                )
+            if clase_fuera_vigencia(self.instance, inicio):
+                raise forms.ValidationError(
+                    "Hay socios cuya membresía no cubre la nueva fecha de la clase."
                 )
         return inicio

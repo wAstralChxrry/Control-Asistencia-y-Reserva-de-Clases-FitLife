@@ -67,7 +67,7 @@ class ValidacionesTest(TestCase):
     def test_no_reasigna_socio_de_una_membresia(self):
         titular = User.objects.create_user(username="titular")
         otro = User.objects.create_user(username="otro")
-        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         membresia = Membresia.objects.create(
             socio=titular, plan=plan, inicio=hoy, fin=hoy
@@ -94,14 +94,14 @@ class ValidacionesTest(TestCase):
         )
 
     def test_plan_rechaza_precio_negativo_y_duracion_cero(self):
-        form = PlanForm({"nombre": "Mensual", "precio": -1, "duracion_dias": 0})
+        form = PlanForm({"nombre": "Mensual", "precio": -1, "duracion_meses": 0})
         self.assertFalse(form.is_valid())
         self.assertIn("precio", form.errors)
-        self.assertIn("duracion_dias", form.errors)
+        self.assertIn("duracion_meses", form.errors)
 
     def test_pago_rechaza_monto_negativo(self):
         user = User.objects.create_user(username="socio")
-        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         membresia = Membresia.objects.create(socio=user, plan=plan, inicio=hoy, fin=hoy)
         form = PagoForm({"membresia": membresia.pk, "monto": -1, "fecha": hoy})
@@ -110,7 +110,7 @@ class ValidacionesTest(TestCase):
 
     def test_estado_efectivo_y_cuenta_inactiva(self):
         user = User.objects.create_user(username="socio")
-        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         membresia = Membresia.objects.create(
             socio=user,

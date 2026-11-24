@@ -20,7 +20,7 @@ class ReservaHorarioTests(TestCase):
         self.admin = usuario.objects.create_user(
             "admin-horario", password="clave", is_staff=True
         )
-        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         Membresia.objects.create(
             socio=self.socio, plan=plan, inicio=hoy, fin=hoy + timedelta(days=30)
@@ -103,7 +103,7 @@ class ReservaHorarioConcurrenteTests(TransactionTestCase):
         socio = get_user_model().objects.create_user(
             "socio-concurrente", password="clave"
         )
-        plan = Plan.objects.create(nombre="Concurrente", precio=1, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Concurrente", precio=1, duracion_meses=1)
         hoy = timezone.localdate()
         Membresia.objects.create(
             socio=socio, plan=plan, inicio=hoy, fin=hoy + timedelta(days=30)
@@ -136,7 +136,7 @@ class ReservaHorarioConcurrenteTests(TransactionTestCase):
         usuario = get_user_model()
         primero = usuario.objects.create_user("primero-fifo", password="clave")
         segundo = usuario.objects.create_user("segundo-fifo", password="clave")
-        plan = Plan.objects.create(nombre="FIFO", precio=1, duracion_dias=30)
+        plan = Plan.objects.create(nombre="FIFO", precio=1, duracion_meses=1)
         hoy = timezone.localdate()
         for socio in (primero, segundo):
             Membresia.objects.create(

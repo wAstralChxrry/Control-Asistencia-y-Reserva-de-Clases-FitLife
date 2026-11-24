@@ -16,7 +16,7 @@ class SeguridadPorRolesTest(TestCase):
         )
         self.socio = User.objects.create_user("socio_rol", password="ClaveSegura42!")
         self.otro = User.objects.create_user("otro_rol", password="ClaveSegura42!")
-        plan = Plan.objects.create(nombre="Plan", precio=10000, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Plan", precio=10000, duracion_meses=1)
         hoy = timezone.localdate()
         for usuario in (self.socio, self.otro):
             Membresia.objects.create(

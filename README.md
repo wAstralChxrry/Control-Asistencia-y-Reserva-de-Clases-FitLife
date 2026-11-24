@@ -7,6 +7,7 @@ Acceso a la aplicación: [http://44.211.20.141](http://44.211.20.141)
 ## Funcionalidades
 
 - Administración de socios, planes, pagos, membresías y clases.
+- Los planes se expresan en meses calendario. Si no se indica una fecha final al crear una membresía, se calcula a partir de su fecha de inicio y la duración del plan.
 - Membresías activas, vencidas o congeladas, con control de fechas.
 - Registro simulado de entradas y salidas mediante el código del QR.
 - Reservas con cupos y lista de espera; los cupos libres se asignan a socios habilitados por orden de llegada.
@@ -14,7 +15,7 @@ Acceso a la aplicación: [http://44.211.20.141](http://44.211.20.141)
 - Datos de demostración que se pueden cargar y eliminar desde el dashboard.
 - Django Admin para consultar y administrar modelos; accesos y reservas son de solo lectura en ese panel.
 
-La aplicación utiliza Django, Django REST Framework, PostgreSQL y templates HTML con CSS y JavaScript. La interfaz se sirve desde Django; no se ha implementado una API pública para los flujos descritos.
+La aplicación utiliza Django, Django REST Framework y PostgreSQL. La interfaz React se sirve desde una EC2 y consume la API del backend a través de API Gateway. Django conserva sus templates y Django Admin como interfaces adicionales.
 
 ## Requisitos
 
@@ -66,7 +67,7 @@ Este proceso revisa las listas cada 30 segundos. Debe permanecer activo junto al
 
 La entrada requiere una cuenta activa y una membresía vigente. Se puede registrar la salida aunque la membresía ya no esté vigente. El aforo se calcula con las entradas que aún no tienen una salida registrada.
 
-El dashboard permite cargar datos de demostración y eliminarlos. Si hay registros ajenos vinculados que podrían verse afectados, la eliminación se detiene. Con la demo cargada, **Generar acceso de socio** muestra el usuario de una cuenta de prueba. Las cuentas existentes y las que crea la demo se configuraron con la contraseña `admin123` para la evaluación local. Los socios creados manualmente utilizan la contraseña asignada en el formulario. Esta clave compartida debe cambiarse antes de exponer el sistema públicamente.
+El dashboard permite cargar datos de demostración y eliminarlos. Si hay registros ajenos vinculados que podrían verse afectados, la eliminación se detiene. Con la demo cargada, **Generar acceso de socio** configura y muestra las credenciales de un socio de prueba. En desarrollo se usa `admin123`; con `DEBUG=False` se debe configurar `FITLIFE_DEMO_PASSWORD` en `.env`. Los socios creados manualmente utilizan la contraseña asignada en el formulario.
 
 Los horarios de la demostración están fijados para el 12, 13 y 14 de noviembre de 2026, en horario de Santiago. Deben actualizarse si se utiliza la demostración después de esas fechas.
 

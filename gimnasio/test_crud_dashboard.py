@@ -51,7 +51,7 @@ class CrudDashboardTest(TestCase):
         socio = usuario.objects.get(username="socio_nuevo")
         self.assertTrue(socio.check_password("UnaClaveLarga!27"))
         self.guardar(
-            "planes", {"nombre": "Mensual", "precio": "20000", "duracion_dias": "30"}
+            "planes", {"nombre": "Mensual", "precio": "20000", "duracion_meses": 1}
         )
         plan = Plan.objects.get(nombre="Mensual")
         hoy = timezone.localdate()
@@ -101,7 +101,7 @@ class CrudDashboardTest(TestCase):
 
         for nombre, contenido in [
             ("socios", "ana@example.org"),
-            ("planes", "30 días"),
+            ("planes", "1 mes"),
             ("membresias", "Activa"),
             ("pagos", "Primera cuota"),
             ("clases", "10 cupos"),
@@ -128,7 +128,7 @@ class CrudDashboardTest(TestCase):
         self.assertTrue(socio.check_password("UnaClaveLarga!27"))
         self.guardar(
             "planes",
-            {"nombre": "Mensual Plus", "precio": "25000", "duracion_dias": "30"},
+            {"nombre": "Mensual Plus", "precio": "25000", "duracion_meses": 1},
             plan,
         )
         datos_membresia["estado"] = "congelada"
@@ -176,7 +176,7 @@ class CrudDashboardTest(TestCase):
         hoy = timezone.localdate()
         invalidos = [
             ("socios", {"username": "inseguro", "password": "123", "is_active": "on"}),
-            ("planes", {"nombre": "Plan", "precio": "-1", "duracion_dias": "0"}),
+            ("planes", {"nombre": "Plan", "precio": "-1", "duracion_meses": "0"}),
             ("clases", {"nombre": "Yoga", "inicio": "2030-01-01T10:00", "cupos": "0"}),
         ]
         for recurso, datos in invalidos:
@@ -184,7 +184,7 @@ class CrudDashboardTest(TestCase):
                 response = self.client.post(reverse("crear", args=[recurso]), datos)
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(response.context["form"].errors)
-        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_meses=1)
         response = self.client.post(
             reverse("crear", args=["membresias"]),
             {

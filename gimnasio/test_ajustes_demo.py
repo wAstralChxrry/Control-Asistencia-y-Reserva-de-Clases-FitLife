@@ -18,7 +18,7 @@ class AjustesDemoTest(TestCase):
             "admin_revision", is_staff=True
         )
         cls.socio = get_user_model().objects.create_user("socio_real")
-        cls.plan = Plan.objects.create(nombre="Real", precio=100, duracion_dias=30)
+        cls.plan = Plan.objects.create(nombre="Real", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         Membresia.objects.create(
             socio=cls.socio, plan=cls.plan, inicio=hoy, fin=hoy + timedelta(days=30)

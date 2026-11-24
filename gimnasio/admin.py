@@ -28,9 +28,9 @@ class UsuarioAdmin(UserAdmin):
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
     form = PlanForm
-    list_display = ("nombre", "precio", "duracion_dias")
+    list_display = ("nombre", "precio", "duracion_meses")
     search_fields = ("nombre",)
-    list_filter = ("duracion_dias",)
+    list_filter = ("duracion_meses",)
 
 
 class EstadoEfectivoFilter(admin.SimpleListFilter):

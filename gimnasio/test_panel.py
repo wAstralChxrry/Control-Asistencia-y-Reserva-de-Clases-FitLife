@@ -15,7 +15,7 @@ class PanelClasesTests(TestCase):
         cls.primero = User.objects.create_user(username="primero")
         cls.segundo = User.objects.create_user(username="segundo")
         cls.tercero = User.objects.create_user(username="tercero")
-        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=100, duracion_meses=1)
         for usuario in (cls.primero, cls.segundo, cls.tercero):
             Membresia.objects.create(
                 socio=usuario,

@@ -17,8 +17,11 @@ from rest_framework.response import Response
 from gimnasio.models import Acceso, Clase, Membresia, Pago, Plan, Reserva
 from gimnasio.servicios import (
     MENSAJE_HORARIO,
+    MENSAJE_VIGENCIA_CLASE,
     bloquear_socio,
+    clase_fuera_vigencia,
     clase_tiene_conflictos,
+    membresia_cubre_clase,
     promover_lista_espera,
     reconciliar_esperas,
     tiene_conflicto_horario,
@@ -112,6 +115,10 @@ class ClaseViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     {"inicio": "Un socio ya está inscrito en otra clase a esa hora."}
                 )
+            if nuevo_inicio != clase.inicio and clase_fuera_vigencia(
+                clase, nuevo_inicio
+            ):
+                raise ValidationError({"inicio": MENSAJE_VIGENCIA_CLASE})
             if (
                 serializer.validated_data.get("cupos", clase.cupos)
                 < clase.reservas.filter(espera=False).count()
@@ -156,6 +163,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     "Se requiere un socio habilitado y una clase futura."
                 )
+            if not membresia_cubre_clase(miembro, clase.inicio):
+                raise ValidationError(MENSAJE_VIGENCIA_CLASE)
             if Reserva.objects.filter(clase=clase, socio=socio).exists():
                 raise ValidationError("El socio ya está inscrito en esta clase.")
             if tiene_conflicto_horario(socio.pk, clase.inicio):
@@ -200,6 +209,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     "Se requiere un socio habilitado y una clase futura."
                 )
+            if not membresia_cubre_clase(miembro, destino.inicio):
+                raise ValidationError(MENSAJE_VIGENCIA_CLASE)
             if (
                 Reserva.objects.filter(clase=destino, socio=socio)
                 .exclude(pk=actual.pk)
@@ -256,6 +267,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 raise ValidationError(
                     "Necesitas una membresía vigente y una clase futura."
                 )
+            if not membresia_cubre_clase(miembro, clase.inicio):
+                raise ValidationError(MENSAJE_VIGENCIA_CLASE)
             if Reserva.objects.filter(clase=clase, socio=request.user).exists():
                 raise ValidationError("Ya tienes una inscripción para esta clase.")
             if tiene_conflicto_horario(request.user.pk, clase.inicio):

@@ -19,9 +19,9 @@ const recursos = {
     campos: [
       { nombre: 'nombre', etiqueta: 'Nombre del plan', requerido: true },
       { nombre: 'precio', etiqueta: 'Precio', tipo: 'number', min: 0, requerido: true },
-      { nombre: 'duracion_dias', etiqueta: 'Duración en días', tipo: 'number', min: 1, requerido: true },
+      { nombre: 'duracion_meses', etiqueta: 'Duración en meses', tipo: 'number', min: 1, requerido: true },
     ],
-    resumen: (item) => [item.nombre, `$${item.precio} · ${item.duracion_dias} días`],
+    resumen: (item) => [item.nombre, `$${item.precio} · ${item.duracion_meses} ${Number(item.duracion_meses) === 1 ? 'mes' : 'meses'}`],
   },
   membresias: {
     titulo: 'Membresías', singular: 'membresía', relaciones: ['socios', 'planes'],
@@ -29,7 +29,7 @@ const recursos = {
       { nombre: 'socio', etiqueta: 'Socio', relacion: 'socios', requerido: true, bloqueadoEnEdicion: true },
       { nombre: 'plan', etiqueta: 'Plan', relacion: 'planes', requerido: true },
       { nombre: 'inicio', etiqueta: 'Inicio', tipo: 'date', requerido: true },
-      { nombre: 'fin', etiqueta: 'Fin', tipo: 'date', requerido: true },
+      { nombre: 'fin', etiqueta: 'Fin', tipo: 'date', soloEdicionObligatoria: true },
       { nombre: 'estado', etiqueta: 'Estado', opciones: [['activa', 'Activa'], ['vencida', 'Vencida'], ['congelada', 'Congelada']], defecto: 'activa', requerido: true },
     ],
     resumen: (item, listas) => [etiquetaRelacion('socios', item.socio, listas), `${etiquetaRelacion('planes', item.plan, listas)} · ${item.estado_visible} · ${item.inicio} al ${item.fin}`],
@@ -108,6 +108,35 @@ function erroresTexto(error) {
   return error?.message || 'No se pudo completar la operación.';
 }
 
+function CampoGestion({ campo, edicion, listas, seccion, valores, setValores }) {
+  const actualizar = (valor) => setValores({ ...valores, [campo.nombre]: valor });
+
+  if (campo.tipo === 'checkbox') {
+    return <label className="gestion-checkbox">
+      <input type="checkbox" checked={Boolean(valores[campo.nombre])} onChange={(evento) => actualizar(evento.target.checked)} />
+      {campo.etiqueta}
+    </label>;
+  }
+
+  const id = `gestion-${campo.nombre}`;
+  const opciones = campo.opciones || (listas[campo.relacion] || []).map((item) => [item.id, etiquetaRelacion(campo.relacion, item.id, listas)]);
+  const requerido = campo.requerido || (campo.soloCreacionObligatoria && edicion.nuevo) || (campo.soloEdicionObligatoria && !edicion.nuevo);
+
+  return <>
+    <label htmlFor={id}>{campo.etiqueta}</label>
+    {campo.relacion || campo.opciones ? (
+      <select id={id} value={valores[campo.nombre]} required={requerido} disabled={campo.bloqueadoEnEdicion && !edicion.nuevo} onChange={(evento) => actualizar(evento.target.value)}>
+        <option value="">Selecciona una opción</option>
+        {opciones.map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
+      </select>
+    ) : (
+      <input id={id} type={campo.tipo || 'text'} min={campo.min} value={valores[campo.nombre]} required={requerido} onChange={(evento) => actualizar(evento.target.value)} />
+    )}
+    {campo.nombre === 'password' && !edicion.nuevo && <small>Deja este campo vacío para conservar la contraseña.</small>}
+    {seccion === 'membresias' && campo.nombre === 'fin' && edicion.nuevo && <small>Si lo dejas vacío, se calcula según la duración del plan.</small>}
+  </>;
+}
+
 function ControlAcceso({ token, api }) {
   const [codigo, setCodigo] = useState('');
   const [tipo, setTipo] = useState('entrada');
@@ -159,6 +188,7 @@ export default function AdminGestion({ token, seccion, api }) {
     const datos = { ...valores };
     if (seccion === 'socios' && !datos.password) delete datos.password;
     if (seccion === 'membresias' && !edicion.nuevo) delete datos.socio;
+    if (seccion === 'membresias' && edicion.nuevo && !datos.fin) delete datos.fin;
     try {
       await api(`${seccion}/${edicion.nuevo ? '' : `${edicion.id}/`}`, { token, method: edicion.nuevo ? 'POST' : 'PATCH', body: JSON.stringify(datos) });
       setEdicion(null); setMensaje('Los datos se guardaron correctamente.'); await cargar();
@@ -179,7 +209,7 @@ export default function AdminGestion({ token, seccion, api }) {
     {error && <div className="mensaje error" role="alert">{error}</div>}
     {edicion && <section className="panel gestion-formulario"><div className="panel-titulo"><h2>{edicion.nuevo ? 'Nuevo' : 'Editar'} {config.singular}</h2><button className="link" type="button" onClick={() => { setEdicion(null); setError(''); }}>Cerrar</button></div><form onSubmit={guardar}>
       {config.campos.map((campo) => <div className="gestion-campo" key={campo.nombre}>
-        {campo.tipo === 'checkbox' ? <label className="gestion-checkbox"><input type="checkbox" checked={Boolean(valores[campo.nombre])} onChange={(evento) => setValores({ ...valores, [campo.nombre]: evento.target.checked })} />{campo.etiqueta}</label> : <><label htmlFor={`gestion-${campo.nombre}`}>{campo.etiqueta}</label>{campo.relacion || campo.opciones ? <select id={`gestion-${campo.nombre}`} value={valores[campo.nombre]} required={campo.requerido} disabled={campo.bloqueadoEnEdicion && !edicion.nuevo} onChange={(evento) => setValores({ ...valores, [campo.nombre]: evento.target.value })}><option value="">Selecciona una opción</option>{(campo.opciones || (listas[campo.relacion] || []).map((item) => [item.id, etiquetaRelacion(campo.relacion, item.id, listas)])).map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}</select> : <input id={`gestion-${campo.nombre}`} type={campo.tipo || 'text'} min={campo.min} value={valores[campo.nombre]} required={campo.requerido || (campo.soloCreacionObligatoria && edicion.nuevo)} onChange={(evento) => setValores({ ...valores, [campo.nombre]: evento.target.value })} />}{campo.nombre === 'password' && !edicion.nuevo && <small>Deja este campo vacío para conservar la contraseña.</small>}</>}
+        <CampoGestion campo={campo} edicion={edicion} listas={listas} seccion={seccion} valores={valores} setValores={setValores} />
       </div>)}
       <div className="gestion-botones"><button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button><button type="button" className="secundario" onClick={() => setEdicion(null)}>Cancelar</button></div>
     </form></section>}

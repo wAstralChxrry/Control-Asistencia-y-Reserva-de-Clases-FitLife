@@ -11,7 +11,7 @@ class FlujosTest(TestCase):
         self.admin = User.objects.create_user("admin", password="clave", is_staff=True)
         self.socio = User.objects.create_user("socio", password="clave")
         self.otro = User.objects.create_user("otro", password="clave")
-        plan = Plan.objects.create(nombre="Mensual", precio=20000, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=20000, duracion_meses=1)
         hoy = timezone.localdate()
         self.miembro = Membresia.objects.create(
             socio=self.socio, plan=plan, inicio=hoy, fin=hoy + timedelta(days=30)

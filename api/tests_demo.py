@@ -65,7 +65,7 @@ class DemoAPITest(TestCase):
         self.assertTrue(LoteDemo.objects.exists())
 
     def test_preserva_reserva_reasignada(self):
-        plan = Plan.objects.create(nombre="Real", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Real", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         Membresia.objects.create(
             socio=self.socio, plan=plan, inicio=hoy, fin=hoy + timedelta(days=30)

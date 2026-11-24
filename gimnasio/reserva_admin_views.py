@@ -11,7 +11,14 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import Clase, Membresia, Reserva
-from .servicios import promover_lista_espera
+from .servicios import (
+    MENSAJE_HORARIO,
+    MENSAJE_VIGENCIA_CLASE,
+    bloquear_socio,
+    membresia_cubre_clase,
+    promover_lista_espera,
+    tiene_conflicto_horario,
+)
 
 
 class ReservaAdministrativaForm(forms.Form):
@@ -84,6 +91,7 @@ def _guardar(request, pk=None):
                 .order_by("pk")
             }
             destino = clases.get(destino_id)
+            socio = bloquear_socio(socio.pk)
             if reserva:
                 reserva = get_object_or_404(Reserva, pk=pk)
             duplicada = Reserva.objects.filter(clase_id=destino_id, socio=socio)
@@ -96,8 +104,16 @@ def _guardar(request, pk=None):
                 form.add_error("clase", "La clase ya no está disponible.")
             elif not miembro or not miembro.permite_acceso:
                 form.add_error("socio", "El socio debe tener una membresía vigente.")
+            elif not membresia_cubre_clase(miembro, destino.inicio):
+                form.add_error("clase", MENSAJE_VIGENCIA_CLASE)
             elif duplicada.exists():
                 form.add_error(None, "Este socio ya tiene una reserva para la clase.")
+            elif tiene_conflicto_horario(
+                socio.pk,
+                destino.inicio,
+                excluir_reserva=reserva.pk if reserva else None,
+            ):
+                form.add_error(None, MENSAJE_HORARIO)
             elif reserva and (reserva.clase_id, reserva.socio_id) == (
                 destino_id,
                 socio.pk,

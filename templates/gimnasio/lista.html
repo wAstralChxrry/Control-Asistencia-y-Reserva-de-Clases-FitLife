@@ -14,7 +14,7 @@
                         <small>{{ item.username }} · {{ item.email|default:'Sin correo' }} · {% if item.is_active %}Activo{% else %}Inactivo{% endif %}</small>
                     {% elif recurso == 'planes' %}
                         <b>{{ item.nombre }}</b>
-                        <small>${{ item.precio }} · {{ item.duracion_dias }} días</small>
+                        <small>${{ item.precio }} · {{ item.duracion_meses }} mes{{ item.duracion_meses|pluralize:'es' }}</small>
                     {% elif recurso == 'membresias' %}
                         <b>{{ item.socio.get_full_name|default:item.socio.username }}</b>
                         <small>{{ item.plan }} · {{ item.estado_visible }} · {{ item.inicio|date:'d/m/Y' }} al {{ item.fin|date:'d/m/Y' }}</small>

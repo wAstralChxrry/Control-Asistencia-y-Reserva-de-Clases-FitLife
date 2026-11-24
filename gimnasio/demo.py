@@ -17,6 +17,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .fechas import fecha_fin_membresia
 from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 
 
@@ -50,9 +51,9 @@ def crear_lote_demo():
         clave = clave_demo()
 
         planes = [
-            Plan.objects.create(nombre="Bronce", precio=24990, duracion_dias=30),
-            Plan.objects.create(nombre="Plata", precio=39990, duracion_dias=30),
-            Plan.objects.create(nombre="Oro", precio=59990, duracion_dias=30),
+            Plan.objects.create(nombre="Bronce", precio=24990, duracion_meses=1),
+            Plan.objects.create(nombre="Plata", precio=39990, duracion_meses=2),
+            Plan.objects.create(nombre="Oro", precio=59990, duracion_meses=3),
         ]
         personas = [
             ("Camila", "Rojas"),
@@ -78,13 +79,12 @@ def crear_lote_demo():
             usuario.save()
             usuarios.append(usuario)
             plan = planes[indice % len(planes)]
+            inicio_membresia = hoy - timedelta(days=120 if indice == 6 else 10)
             miembro = Membresia.objects.create(
                 socio=usuario,
                 plan=plan,
-                inicio=hoy - timedelta(days=10),
-                fin=(
-                    hoy + timedelta(days=20) if indice != 6 else hoy - timedelta(days=1)
-                ),
+                inicio=inicio_membresia,
+                fin=fecha_fin_membresia(inicio_membresia, plan.duracion_meses),
                 estado="congelada" if indice == 7 else "activa",
                 dentro=indice < 3,
             )
@@ -93,7 +93,7 @@ def crear_lote_demo():
                 Pago.objects.create(
                     membresia=miembro,
                     monto=plan.precio,
-                    fecha=hoy - timedelta(days=10),
+                    fecha=inicio_membresia,
                     detalle="Pago de demostración",
                 )
             )

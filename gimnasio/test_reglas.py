@@ -21,7 +21,7 @@ class ReglasSegurasTest(TestCase):
             User.objects.create_user(f"socio{i}", password="ClaveSegura1!")
             for i in range(3)
         ]
-        plan = Plan.objects.create(nombre="Plan", precio=10000, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Plan", precio=10000, duracion_meses=1)
         hoy = timezone.localdate()
         self.miembros = [
             Membresia.objects.create(

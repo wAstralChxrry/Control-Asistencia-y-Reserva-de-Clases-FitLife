@@ -15,7 +15,7 @@ class ApiTest(TestCase):
         )
         self.socio = User.objects.create_user("socio", password="clave-fuerte-123")
         self.otro = User.objects.create_user("otro", password="clave-fuerte-123")
-        plan = Plan.objects.create(nombre="Bronce", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Bronce", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         for usuario in [self.socio, self.otro]:
             Membresia.objects.create(
@@ -42,7 +42,7 @@ class ApiTest(TestCase):
         self.client.force_authenticate(self.admin)
         response = self.client.post(
             "/api/planes/",
-            {"nombre": "Oro", "precio": 200, "duracion_dias": 30},
+            {"nombre": "Oro", "precio": 200, "duracion_meses": 1},
             format="json",
         )
         self.assertEqual(response.status_code, 201)
@@ -54,7 +54,7 @@ class ApiTest(TestCase):
         self.assertEqual(
             self.client.post(
                 "/api/planes/",
-                {"nombre": "Mal", "precio": -1, "duracion_dias": 0},
+                {"nombre": "Mal", "precio": -1, "duracion_meses": 0},
                 format="json",
             ).status_code,
             400,
@@ -213,7 +213,7 @@ class ConcurrenciaReservasTest(TransactionTestCase):
             self.skipTest("Requiere PostgreSQL para verificar bloqueos reales.")
         User = get_user_model()
         usuarios = [User.objects.create_user(f"concurrente{i}") for i in range(2)]
-        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Plan", precio=100, duracion_meses=1)
         hoy = timezone.localdate()
         for usuario in usuarios:
             Membresia.objects.create(

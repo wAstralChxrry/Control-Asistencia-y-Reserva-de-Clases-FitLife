@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from rest_framework import serializers
+from gimnasio.fechas import fecha_fin_membresia
 from gimnasio.models import Clase, Membresia, Pago, Plan, Reserva
 
 
@@ -49,10 +50,11 @@ class SocioSerializer(serializers.ModelSerializer):
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plan
-        fields = ("id", "nombre", "precio", "duracion_dias")
+        fields = ("id", "nombre", "precio", "duracion_meses")
 
 
 class MembresiaSerializer(serializers.ModelSerializer):
+    fin = serializers.DateField(required=False)
     estado_visible = serializers.CharField(read_only=True)
     vigente = serializers.BooleanField(read_only=True)
     plan_nombre = serializers.CharField(source="plan.nombre", read_only=True)
@@ -75,6 +77,16 @@ class MembresiaSerializer(serializers.ModelSerializer):
         read_only_fields = ("codigo", "dentro")
 
     def validate(self, attrs):
+        if self.instance is None and "fin" not in attrs:
+            inicio = attrs.get("inicio")
+            plan = attrs.get("plan")
+            if inicio and plan:
+                try:
+                    attrs["fin"] = fecha_fin_membresia(inicio, plan.duracion_meses)
+                except (OverflowError, ValueError):
+                    raise serializers.ValidationError(
+                        {"inicio": "La duración del plan excede las fechas permitidas."}
+                    )
         inicio = attrs.get("inicio", getattr(self.instance, "inicio", None))
         fin = attrs.get("fin", getattr(self.instance, "fin", None))
         socio = attrs.get("socio", getattr(self.instance, "socio", None))
@@ -128,14 +140,15 @@ class ReservaSerializer(serializers.ModelSerializer):
         if not obj.espera:
             return None
         hoy = timezone.localdate()
+        fecha_clase = timezone.localdate(obj.clase.inicio)
         elegibles = (
             Reserva.objects.filter(
                 clase=obj.clase,
                 espera=True,
                 socio__is_active=True,
                 socio__membresia__estado="activa",
-                socio__membresia__inicio__lte=hoy,
-                socio__membresia__fin__gte=hoy,
+                socio__membresia__inicio__lte=min(hoy, fecha_clase),
+                socio__membresia__fin__gte=max(hoy, fecha_clase),
             )
             .annotate(
                 conflicto_horario=Exists(

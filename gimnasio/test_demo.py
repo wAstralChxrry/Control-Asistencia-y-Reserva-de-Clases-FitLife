@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from .fechas import fecha_fin_membresia
 from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 
 
@@ -14,7 +15,7 @@ class DemoTest(TestCase):
         )
         cls.socio = get_user_model().objects.create_user("socio_real")
         cls.plan_real = Plan.objects.create(
-            nombre="Real", precio=20000, duracion_dias=30
+            nombre="Real", precio=20000, duracion_meses=1
         )
 
     def test_carga_y_eliminacion_solo_afectan_lote(self):
@@ -27,6 +28,19 @@ class DemoTest(TestCase):
         self.assertEqual(Clase.objects.count(), 4)
         self.assertEqual(Reserva.objects.filter(espera=True).count(), 2)
         self.assertEqual(Acceso.objects.filter(permitido=True).count(), 3)
+        self.assertEqual(
+            dict(
+                Plan.objects.exclude(pk=self.plan_real.pk).values_list(
+                    "nombre", "duracion_meses"
+                )
+            ),
+            {"Bronce": 1, "Plata": 2, "Oro": 3},
+        )
+        for membresia in Membresia.objects.select_related("plan", "socio"):
+            self.assertEqual(
+                membresia.fin,
+                fecha_fin_membresia(membresia.inicio, membresia.plan.duracion_meses),
+            )
         miembro = Membresia.objects.filter(dentro=False).first()
         self.client.post(
             reverse("acceso"), {"codigo": str(miembro.codigo), "tipo": "entrada"}

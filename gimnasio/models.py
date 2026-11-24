@@ -1,6 +1,6 @@
 import uuid
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -10,8 +10,10 @@ class Plan(models.Model):
     precio = models.DecimalField(
         max_digits=10, decimal_places=0, validators=[MinValueValidator(0)]
     )
-    duracion_dias = models.PositiveIntegerField(
-        default=30, validators=[MinValueValidator(1)]
+    duracion_meses = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(1200)],
+        verbose_name="duración en meses",
     )
 
     def __str__(self):

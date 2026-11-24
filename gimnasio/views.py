@@ -16,8 +16,11 @@ from .models import Acceso, Clase, LoteDemo, Membresia, Pago, Plan, Reserva
 from .permisos import solo_socio
 from .servicios import (
     MENSAJE_HORARIO,
+    MENSAJE_VIGENCIA_CLASE,
     bloquear_socio,
+    clase_fuera_vigencia,
     clase_tiene_conflictos,
+    membresia_cubre_clase,
     promover_lista_espera,
     reconciliar_esperas,
     tiene_conflicto_horario,
@@ -100,6 +103,14 @@ def editar(request, recurso, pk=None):
                     form.add_error(
                         "inicio", "Un socio ya está inscrito en otra clase a esa hora."
                     )
+                if (
+                    form.cleaned_data.get("inicio")
+                    and form.cleaned_data["inicio"] != clase_bloqueada.inicio
+                    and clase_fuera_vigencia(
+                        clase_bloqueada, form.cleaned_data["inicio"]
+                    )
+                ):
+                    form.add_error("inicio", MENSAJE_VIGENCIA_CLASE)
                 if (
                     form.cleaned_data["cupos"]
                     < clase_bloqueada.reservas.filter(espera=False).count()
@@ -204,6 +215,8 @@ def reservar(request, pk):
             messages.error(
                 request, "Necesitas una membresía vigente y una clase futura."
             )
+        elif not membresia_cubre_clase(miembro, clase.inicio):
+            messages.error(request, MENSAJE_VIGENCIA_CLASE)
         elif Reserva.objects.filter(clase=clase, socio=request.user).exists():
             messages.info(request, "Ya tienes una inscripción para esta clase.")
         elif tiene_conflicto_horario(request.user.pk, clase.inicio):

@@ -19,7 +19,7 @@ class ReservasAdministracionTests(TestCase):
         cls.socio = User.objects.create_user("socio1", password="ClaveSegura15!")
         cls.otro = User.objects.create_user("socio2", password="ClaveSegura15!")
         cls.tercero = User.objects.create_user("socio3", password="ClaveSegura15!")
-        plan = Plan.objects.create(nombre="Mensual", precio=10000, duracion_dias=30)
+        plan = Plan.objects.create(nombre="Mensual", precio=10000, duracion_meses=1)
         hoy = timezone.localdate()
         for socio in (cls.socio, cls.otro, cls.tercero):
             Membresia.objects.create(

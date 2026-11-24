@@ -1,6 +1,6 @@
 # API de FitLife
 
-La API está en desarrollo y se sirve bajo `/api/`. El inicio de sesión y Django Admin existentes siguen usando sesiones de Django.
+La API se sirve bajo `/api/`. La interfaz React utiliza tokens JWT; las vistas Django y Django Admin usan sesiones de Django.
 
 ## Autenticación
 
@@ -17,9 +17,11 @@ La API está en desarrollo y se sirve bajo `/api/`. El inicio de sesión y Djang
 
 Las operaciones de reservas usan las reglas de membresía, límite de cupos y promoción de lista de espera. El código QR sigue siendo una simulación y no utiliza cámara.
 
+Los planes usan `duracion_meses`. Al crear una membresía se puede omitir `fin`: se calcula por meses calendario desde `inicio`, incluyendo hasta el día anterior al aniversario. Las fechas existentes se conservan. Para reservar, la membresía debe cubrir también la fecha de la clase.
+
 ## Datos de demostración
 
-Los endpoints administrativos `GET /api/demo/estado/` y `POST /api/demo/cargar/`, `/api/demo/eliminar/` y `/api/demo/acceso/` comparten las reglas de la interfaz Django. En desarrollo se conserva la clave de demostración `admin123`. Con `DEBUG=False`, se debe configurar `FITLIFE_DEMO_PASSWORD` con una clave que cumpla los validadores; la aplicación no cambia contraseñas de usuarios existentes automáticamente.
+Los endpoints administrativos `GET /api/demo/estado/` y `POST /api/demo/cargar/`, `/api/demo/eliminar/` y `/api/demo/acceso/` comparten las reglas de la interfaz Django. En desarrollo se usa la clave de demostración `admin123`. Con `DEBUG=False`, se debe configurar `FITLIFE_DEMO_PASSWORD` con una clave que cumpla los validadores. Al generar acceso se establece esa clave para un socio de demostración elegible.
 
 ## Frontend local
 
@@ -31,8 +33,8 @@ npm install
 npm run dev
 ```
 
-Vite entrega la interfaz en `http://127.0.0.1:5173/` y envía `/api/` al backend local. Este proxy es solo para desarrollo; la configuración de API Gateway, HTTPS y EC2 frontend todavía está pendiente. La sesión React se guarda en memoria y se cierra al recargar la página.
+Vite entrega la interfaz en `http://127.0.0.1:5173/` y envía `/api/` al backend local. En AWS, Nginx sirve el frontend y envía `/api/` a API Gateway. La sesión React se guarda en memoria y se cierra al recargar la página.
 
 ## Estado de verificación
 
-Las pruebas `python manage.py test api` cubren autenticación, permisos, operaciones de planes y reservas, aforo y perfil. También se ejecutaron con PostgreSQL, incluyendo una prueba de dos reservas simultáneas para una clase con un solo cupo. Se comprobó localmente la combinación Django 6.1.3, DRF 3.18.3 y Simple JWT 5.5.1 que se prevé utilizar en la EC2; no se ha instalado ni probado en la instancia.
+Las pruebas `python manage.py test api gimnasio` cubren autenticación, permisos, planes, vigencias, reservas, aforo y perfil. Incluyen pruebas de concurrencia que requieren PostgreSQL.
